@@ -1,0 +1,4 @@
+ php artisan make:controller Api\\AuthController
+
+ php artisan laravel/sanctum
+ 
