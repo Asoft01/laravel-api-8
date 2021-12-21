@@ -1,4 +1,7 @@
- php artisan make:controller Api\\AuthController
+php artisan make:controller Api\\AuthController
 
- php artisan laravel/sanctum
- 
+php artisan laravel/sanctum
+
+php artisan make:model Category -m
+
+php artisan make:controller Api\\BlogController
