@@ -31,8 +31,12 @@ class Blog extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function comments(){
+        return $this->hasMany(Comment::class);
+    }
+
     public function getImageUrlAttribute(){
-        return asset('/upload/blog_images/'.$this->image);
+        return asset('/uploads/blog_images/'.$this->image);
     }
 
     public function getHumanReadableCreatedAtAttribute(){

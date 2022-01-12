@@ -5,3 +5,7 @@ php artisan laravel/sanctum
 php artisan make:model Category -m
 
 php artisan make:controller Api\\BlogController
+
+ php artisan make:model Comment -m
+
+php artisan make:controller Api\\CommentController

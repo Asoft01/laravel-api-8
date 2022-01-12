@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Blog;
+use App\Models\BlogLike;
 use File;
 
 class BlogController extends Controller
@@ -47,7 +48,8 @@ class BlogController extends Controller
     }
 
     public function list(Request $request){
-        $blog_query = Blog::with(['user', 'category']);
+        // $blog_query = Blog::with(['user', 'category']);
+        $blog_query = Blog::withCount('comments')->with(['user', 'category']);
 
         if($request->keyword){
             $blog_query->where('title', 'LIKE', '%'.$request->keyword.'%');
@@ -63,7 +65,7 @@ class BlogController extends Controller
             $blog_query->where('user_id', $request->user_id);
         }
 
-        if($request->sortBy && in_array($request->sortBy, ['id', 'created_at'])){
+        if($request->sortBy && in_array($request->sortBy, ['id', 'created_at', 'comments_count'])){
             $sortBy = $request->sortBy;
         }else{
             $sortBy= 'id';
@@ -95,11 +97,32 @@ class BlogController extends Controller
         ], 200);
     }
 
+    // I don't know why viewAll is not displaying ooooooooooooooooooooooo
+    public function viewAll(Request $request){
+        return response()->json([
+            'message' => 'Users Successfully Fetched',
+        ], 200);
+    }
+
     public function details($id){
         $blog = Blog::with(['user', 'category'])->where('id', $id)->first();
         if($blog){
+            // dd($user); die;
+            $user= auth('sanctum')->user();
+            // dd($user);
+            if($user){
+                $blog_like = BlogLike::where('blog_id', $blog->id)->where('user_id', $user->id)->first();
+                // If the blog is already liked by the current user 
+                if($blog_like){
+                    $blog->liked_by_current_user = true;
+                }else{
+                    $blog->liked_by_current_user = false;
+                }
+            }else{
+                $blog->liked_by_current_user = false;
+            }
             return response()->json([
-                'message' => 'Blog Successfully Fetched',
+                'message' => 'Blog Detail Successfully Fetched',
                 'data' => $blog
             ], 200);
         }else{
@@ -110,7 +133,7 @@ class BlogController extends Controller
     }
 
     public function update($id, Request $request){
-        $blog = Blog::with(['user', 'category'])->where('id', $id)->first();
+        $blog = Blog::withCount('comments')->with(['user', 'category'])->where('id', $id)->first();
         if($blog){
             if($blog->user_id == $request->user()->id){
                 $validator = Validator::make($request->all(), [
@@ -118,7 +141,7 @@ class BlogController extends Controller
                    'short_description' => 'required',
                    'long_description' => 'required',
                    'category_id' => 'required',
-                   'image' => 'nullable|images|mimes:jpg,bmp,png'
+                   'image' => 'nullable|image|mimes:jpg,bmp,png'
                 ]);
 
                 if($validator->fails()){
@@ -129,9 +152,9 @@ class BlogController extends Controller
                 }
 
                 if($request->hasFile('image')){
-                    $image_name = time().'.'.$request->image()->extension();
+                    $image_name = time().'.'.$request->image->extension();
                     $request->image->move(public_path('/uploads/blog_images'), $image_name);
-                    $old_path = public_path().'upload/blog_images/'.$blog->image;
+                    $old_path = public_path().'uploads/blog_images/'.$blog->image;
                     
                     if(File::exists($old_path)){
                         File::delete($old_path);
@@ -139,7 +162,20 @@ class BlogController extends Controller
                 }else{
                     $image_name = $blog->image;
                 }
-            }else{
+                
+                $blog->update([
+                    'title' => $request->title,
+                    'short_description' => $request->short_description,
+                    'long_description' => $request->long_description,
+                    'category_id' => $request->category_id,
+                    'image' => $image_name
+                ]);
+
+                return response()->json([
+                    'message' => 'Blog Successfully updated',
+                    'data' => $blog
+                ], 200);
+            }else{  
                 return response()->json([
                     'message' => 'Access denied'
                 ], 403);
@@ -150,4 +186,56 @@ class BlogController extends Controller
             ], 400);
         }
     }
+
+    public function delete($id, Request $request){
+        $blog = Blog::where('id', $id)->first();
+        if($blog){
+            if($blog->user_id == $request->user()->id){
+                $old_path = public_path().'uploads/blog_images/'.$blog->image;
+                if(File::exists($old_path)){
+                    File::delete($old_path);
+                }
+
+                $blog->delete();
+                return response()->json([
+                    'message' => 'Blog Successfully deleted'
+                ], 200);
+            }else{
+                return response()->json([
+                    'message' => 'Access denied',
+                ], 403);
+            }
+        }else{
+            return response()->json([
+                'message'=> 'No blog found'
+            ], 400);
+        }
+    }
+
+    public function toggle_like($id, Request $request){
+        $blog = Blog::where('id', $id)->first();
+        if($blog){
+            $user= $request->user();
+            $blog_like = BlogLike::where('blog_id', $blog->id)->where('user_id', $user->id)->first();
+            if($blog_like){
+                $blog_like->delete();
+                return response()->json([
+                    'message' => 'Like Successfully removed'
+                ], 200);
+            }else{
+                BlogLike::create([
+                    'blog_id' => $blog->id,
+                    'user_id' => $user->id
+                ]);
+
+                return response()->json([
+                    'message' => 'Blog Successfully Liked'
+                ], 200);
+            }
+        }else{
+            return response()->json([
+                'message' => 'No blog found'
+            ], 400);
+        }
+    }   
 }
