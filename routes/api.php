@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\ProfileController;
 
 
 
@@ -29,6 +30,7 @@ Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::get('/auth/user', [AuthController::class, 'user'])->middleware('auth:sanctum');
 Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
 Route::get('/blogs', [BlogController::class, 'list']);
 Route::get('/view-all', [BlogController::class, 'viewAll']);
 Route::post('/blogs/create', [BlogController::class, 'create'])->middleware('auth:sanctum');
@@ -40,3 +42,6 @@ Route::post('/blogs/{blog_id}/comments/create', [CommentController::class, 'crea
 Route::get('/blogs/{blog_id}/comments', [CommentController::class, 'list']);
 Route::put('/comments/{comment_id}/update', [CommentController::class, 'update'])->middleware('auth:sanctum');
 Route::delete('/comments/{comment_id}/delete', [CommentController::class, 'delete'])->middleware('auth:sanctum');
+
+Route::post('/profile/change-password', [ProfileController::class, 'change_password'])->middleware('auth:sanctum');
+Route::post('/profile/update-profile', [ProfileController::class, 'update_profile'])->middleware('auth:sanctum');

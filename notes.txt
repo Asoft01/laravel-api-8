@@ -9,3 +9,5 @@ php artisan make:controller Api\\BlogController
  php artisan make:model Comment -m
 
 php artisan make:controller Api\\CommentController
+
+php artisan make:migration add_some_columns_to_users_table --table=users

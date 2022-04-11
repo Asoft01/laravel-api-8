@@ -35,7 +35,12 @@ class Blog extends Model
         return $this->hasMany(Comment::class);
     }
 
+    public function likes(){
+        return $this->hasMany(BlogLike::class);
+    }
+
     public function getImageUrlAttribute(){
+        // $this->image is coming from the database
         return asset('/uploads/blog_images/'.$this->image);
     }
 

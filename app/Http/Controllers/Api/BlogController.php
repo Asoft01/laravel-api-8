@@ -49,7 +49,7 @@ class BlogController extends Controller
 
     public function list(Request $request){
         // $blog_query = Blog::with(['user', 'category']);
-        $blog_query = Blog::withCount('comments')->with(['user', 'category']);
+        $blog_query = Blog::withCount(['comments', 'likes'])->with(['user', 'category']);
 
         if($request->keyword){
             $blog_query->where('title', 'LIKE', '%'.$request->keyword.'%');
@@ -65,7 +65,7 @@ class BlogController extends Controller
             $blog_query->where('user_id', $request->user_id);
         }
 
-        if($request->sortBy && in_array($request->sortBy, ['id', 'created_at', 'comments_count'])){
+        if($request->sortBy && in_array($request->sortBy, ['id', 'created_at', 'comments_count', 'likes_count'])){
             $sortBy = $request->sortBy;
         }else{
             $sortBy= 'id';
@@ -105,11 +105,12 @@ class BlogController extends Controller
     }
 
     public function details($id){
-        $blog = Blog::with(['user', 'category'])->where('id', $id)->first();
+        $blog = Blog::withCount(['comments', 'likes'])->with(['user', 'category'])->where('id', $id)->first();
         if($blog){
             // dd($user); die;
             $user= auth('sanctum')->user();
             // dd($user);
+            // if user is presenet
             if($user){
                 $blog_like = BlogLike::where('blog_id', $blog->id)->where('user_id', $user->id)->first();
                 // If the blog is already liked by the current user 
@@ -132,15 +133,16 @@ class BlogController extends Controller
         }
     }
 
+
     public function update($id, Request $request){
         $blog = Blog::withCount('comments')->with(['user', 'category'])->where('id', $id)->first();
         if($blog){
             if($blog->user_id == $request->user()->id){
                 $validator = Validator::make($request->all(), [
                    'title' => 'required|max:250', 
-                   'short_description' => 'required',
-                   'long_description' => 'required',
-                   'category_id' => 'required',
+                //    'short_description' => 'required',
+                //    'long_description' => 'required',
+                //    'category_id' => 'required',
                    'image' => 'nullable|image|mimes:jpg,bmp,png'
                 ]);
 
@@ -163,13 +165,29 @@ class BlogController extends Controller
                     $image_name = $blog->image;
                 }
                 
-                $blog->update([
-                    'title' => $request->title,
-                    'short_description' => $request->short_description,
-                    'long_description' => $request->long_description,
-                    'category_id' => $request->category_id,
-                    'image' => $image_name
-                ]);
+                // $blog->update([
+                //     'title' => $request->title,
+                //     'short_description' => $request->short_description,
+                //     'long_description' => $request->long_description,
+                //     'category_id' => $request->category_id,
+                //     'image' => $image_name
+                // ]);
+
+                $blog->fill($request->only([
+                    'title',
+                    'short_description',
+                    'long_description',
+                    'category_id',
+                    'image'
+                ]));
+
+                if($blog->isClean()){
+                    return response([
+                        'mesage' => 'You  need to specify a different value to update'
+                    ], 422);
+                }
+
+                $blog->save();
 
                 return response()->json([
                     'message' => 'Blog Successfully updated',
