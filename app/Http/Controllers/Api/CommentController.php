@@ -87,6 +87,7 @@ class CommentController extends Controller
                     'message' => 'Comment Successfully Updated',
                     'data' => $comment
                  ], 200);
+
             }else{
                return response()->json([
                 'message' => 'Access denied',
