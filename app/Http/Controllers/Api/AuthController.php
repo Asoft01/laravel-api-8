@@ -64,6 +64,7 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
+        // To check if the password is working fine
         if($user){
             if(Hash::check($request->password, $user->password)){
                 $token = $user->createToken('auth-token')->plainTextToken;
