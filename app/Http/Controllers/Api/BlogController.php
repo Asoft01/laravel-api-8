@@ -29,7 +29,7 @@ class BlogController extends Controller
 
         $image_name = time().'.'.$request->image->extension();
         $request->image->move(public_path('/uploads/blog_images'), $image_name);
-
+        
         $blog = Blog::create([
             'title' => $request->title, 
             'short_description' => $request->short_description,
@@ -54,7 +54,7 @@ class BlogController extends Controller
         if($request->keyword){
             $blog_query->where('title', 'LIKE', '%'.$request->keyword.'%');
         }
-
+        
         if($request->category){
             $blog_query->whereHas('category', function($query) use($request){
                 $query->where('slug', $request->category);
@@ -65,7 +65,8 @@ class BlogController extends Controller
             $blog_query->where('user_id', $request->user_id);
         }
 
-        if($request->sortBy && in_array($request->sortBy, ['id', 'created_at', 'comments_count', 'likes_count'])){
+        if($request->sortBy && in_array($request->sortBy, ['id', 
+        'created_at', 'comments_count', 'likes_count'])){
             $sortBy = $request->sortBy;
         }else{
             $sortBy= 'id';
