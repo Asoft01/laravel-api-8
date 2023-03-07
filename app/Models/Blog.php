@@ -26,7 +26,6 @@ class Blog extends Model
         return $this->belongsTo(User::class);
     }
 
-    
     public function category(){
         return $this->belongsTo(Category::class);
     }
@@ -43,7 +42,7 @@ class Blog extends Model
         // $this->image is coming from the database
         return asset('/uploads/blog_images/'.$this->image);
     }
-
+    
     public function getHumanReadableCreatedAtAttribute(){
         return $this->created_at->diffForHumans();
     }

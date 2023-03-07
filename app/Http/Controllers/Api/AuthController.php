@@ -60,7 +60,7 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Validator Fails',
                 'errors' => $validator->errors() 
-            ], 422); 
+            ], 422);
         }
 
         $user = User::where('email', $request->email)->first();
